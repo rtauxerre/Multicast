@@ -14,8 +14,8 @@ import threading
 
 # Multicast address
 multicast_address = '239.0.0.1'
-# Port
-port = 10000
+# Multicast port
+multicast_port = 10000
 
 #
 # Chat Server
@@ -26,7 +26,7 @@ class ChatServer( threading.Thread ) :
 		# Set up the server connection
 		connection = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
 		connection.setsockopt( socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton( multicast_address ) + socket.inet_aton( '0.0.0.0' ) )
-		connection.bind( ( '0.0.0.0', port ) )
+		connection.bind( ( '0.0.0.0', multicast_port ) )
 		# Continuously read client message
 		self.running = True
 		while self.running :
@@ -68,7 +68,7 @@ class ChatClient( threading.Thread ) :
 				server.running = False
 				break
 			# Send the message through the network
-			connection.sendto( message.encode(), ( multicast_address, port ) )
+			connection.sendto( message.encode(), ( multicast_address, multicast_port ) )
 			# Temporization
 			time.sleep( 0.03 )
 		# Close the connection
