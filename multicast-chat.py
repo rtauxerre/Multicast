@@ -2,6 +2,8 @@
 
 #
 # Multicast Chat Application
+# https://github.com/rtauxerre/Multicast
+# Copyright (c) 2021 Michaël Roy
 #
 
 # External dependencies
