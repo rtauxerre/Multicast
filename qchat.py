@@ -17,9 +17,10 @@ from PySide2.QtCore import *
 from PySide2.QtWidgets import *
 from PySide2.QtGui import *
 
-# Multicast address
+#
+# Multicast address and port
+#
 multicast_address = '239.0.0.1'
-# Multicast port
 multicast_port = 10000
 
 #
@@ -52,23 +53,25 @@ class ChatServer( threading.Thread ) :
 #
 # Chat client with Qt interface
 #
-class QChat( QWidget ) :
+class QMulticastChat( QWidget ) :
 	# Initialize the window
 	def __init__( self ):
 		QWidget.__init__( self )
 		# Set the window title
 		self.setWindowTitle( 'RT Auxerre Multicast Chat' )
 		# Set fixed window size
-		self.setFixedWidth(640)
-		self.setFixedHeight(480)
+		self.setFixedWidth(800)
+		self.setFixedHeight(600)
 		# Text edit to show the received messages
 		self.text_area = QTextEdit()
 		self.text_area.setFocusPolicy( Qt.NoFocus )
-		# Line edit to enter the messages to send
+		# Line edit to enter the message to send
 		self.message = QLineEdit()
 		# Application layout
 		self.layout = QVBoxLayout( self )
+		self.layout.addWidget( QLabel('Message received :') )
 		self.layout.addWidget( self.text_area )
+		self.layout.addWidget( QLabel('Send a message :') )
 		self.layout.addWidget( self.message )
 		# Signal to know when a new message is entered
 		self.message.returnPressed.connect( self.send_message )
@@ -77,6 +80,9 @@ class QChat( QWidget ) :
 		# Network connection to send the messages
 		self.connection = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
 		self.connection.setsockopt( socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 1 )
+		# Start the server
+		self.server = ChatServer()
+		self.server.start()
 	# Handle a new message
 	def send_message( self ) :
 		# Return if the message is empty
@@ -87,11 +93,10 @@ class QChat( QWidget ) :
 		self.message.clear()
 	# Close the widget
 	def closeEvent( self, event ) :
-		# Close the connection
-		self.connection.close()
 		# Close the server
-		global server
-		server.running = False
+		self.server.running = False
+		# Close the client connection
+		self.connection.close()
 		# Close main application
 		event.accept()
 
@@ -104,11 +109,8 @@ if __name__ == "__main__" :
 	os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
 	os.environ["QT_SCREEN_SCALE_FACTORS"] = "1"
 	os.environ["QT_SCALE_FACTOR"] = "1"
-	# Start the server
-	server = ChatServer()
-	server.start()
 	# Start the Qt application
 	app = QApplication( [] )
-	window = QChat()
+	window = QMulticastChat()
 	window.show()
 	sys.exit( app.exec_() )
