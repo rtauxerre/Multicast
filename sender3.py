@@ -1,21 +1,28 @@
-# chat server using multicast
-# python fork of the original ruby implementation
-# http://tx.pignata.com/2012/11/multicast-in-ruby-building-a-peer-to-peer-chat-system.html
-# send.py
-# usage : $ python3 send.py message
+#! /usr/bin/env python3
 
+#
+# Multicast Chat Application - Client implementation
+# https://github.com/rtauxerre/Multicast
+# Copyright (c) 2021 Michaël Roy
+# usage : $ ./sender3.py message
+#
+
+# External dependencies
 import socket
-import struct
 import sys
 
-message = sys.argv[1] if len(sys.argv) > 1 else 'message via multicast'
+# Check the message
+if len( sys.argv ) > 1 : message = sys.argv[ 1 ]
+else : print( 'Message missing...' ); exit( 1 )
 
-multicast_addr = '230.0.0.1'
-port = 3000
+# Multicast address
+multicast_address = '239.0.0.1'
 
-sock = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
-ttl = struct.pack( 'b', 1 )
+# Multicast port
+multicast_port = 10000
 
-sock.setsockopt( socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl )
-sock.sendto( bytearray( message, "utf-8" ), ( multicast_addr, port ) )
-sock.close()
+# Create a UDP socket
+with socket.socket( socket.AF_INET, socket.SOCK_DGRAM ) as connection :
+	# Send the message to the multicast address and port
+	connection.sendto( message.encode(), ( multicast_address, multicast_port ) )
+

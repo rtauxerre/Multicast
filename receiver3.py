@@ -1,23 +1,34 @@
-# chat server using multicast
-# python fork of the original ruby implementation
-# http://tx.pignata.com/2012/11/multicast-in-ruby-building-a-peer-to-peer-chat-system.html
-# receiver.py
-# usage : $ python3 receiver.py  # wait for messages to come in
+#! /usr/bin/env python3
 
+#
+# Multicast Chat Application - Server implementation
+# https://github.com/rtauxerre/Multicast
+# Copyright (c) 2021 Michaël Roy
+# usage : $ ./receiver3.py
+#
+
+# External dependencies
 import socket
-import struct
 
-multicast_addr = '230.0.0.1'
-bind_addr = '0.0.0.0'
-port = 3000
+# Multicast address
+multicast_address = '239.0.0.1'
 
-sock = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
-membership = socket.inet_aton( multicast_addr ) + socket.inet_aton( bind_addr )
+# Multicast port
+multicast_port = 10000
 
-sock.setsockopt( socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, membership )
-sock.setsockopt( socket.SOL_SOCKET, socket.SO_REUSEADDR, 1 )
-sock.bind( ( bind_addr, port ) )
+# Create the server socket
+connection = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
+connection.setsockopt( socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
+		socket.inet_aton( multicast_address ) + socket.inet_aton( '0.0.0.0' ) )
+connection.bind( ( '0.0.0.0', multicast_port ) )
 
-while True :
-	message, address = sock.recvfrom( 255 )
-	print( str( message, "utf-8") )
+# Handle exceptions such as Ctrl+C
+try :
+	# Receive messages
+	while True :
+		message, address = connection.recvfrom( 1024 )
+		print( '{} : {} > {}'.format( *address, message.decode() ) )
+# Exceptions
+except : pass
+# Close the connection
+finally : connection.close()
