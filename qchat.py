@@ -58,6 +58,9 @@ class QChat( QWidget ) :
 		QWidget.__init__( self )
 		# Set the window title
 		self.setWindowTitle( 'RT Auxerre Multicast Chat' )
+		# Set fixed window size
+		self.setFixedWidth(640)
+		self.setFixedHeight(480)
 		# Text edit to show the received messages
 		self.text_area = QTextEdit()
 		self.text_area.setFocusPolicy( Qt.NoFocus )
