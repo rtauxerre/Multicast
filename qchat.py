@@ -77,8 +77,10 @@ class QChat( QWidget ) :
 		# Network connection to send the messages
 		self.connection = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
 		self.connection.setsockopt( socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 1 )
-	# Send the message through the network
+	# Handle a new message
 	def send_message( self ) :
+		# Return if the message is empty
+		if not self.message.text() : return
 		# Send the message through the network
 		self.connection.sendto( self.message.text().encode(), ( multicast_address, multicast_port ) )
 		# Clear the text input widget
