@@ -43,7 +43,7 @@ class ChatServer( threading.Thread ) :
 				# Read the message
 				message, address = connection.recvfrom( 255 )
 				global window
-				window.text_area.append('{}:{} > {}'.format( address[0], address[1], message.decode() ))
+				window.text_area.append('{} : {} > {}'.format( address[0], address[1], message.decode() ))
 			# Temporization
 			time.sleep( 0.03 )
 		# Close the connection
