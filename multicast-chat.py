@@ -4,6 +4,7 @@
 # Multicast Chat Application
 # https://github.com/rtauxerre/Multicast
 # Copyright (c) 2021 Michaël Roy
+# usage : $ ./multicast-chat.py
 #
 
 # External dependencies
@@ -14,6 +15,7 @@ import threading
 
 # Multicast address
 multicast_address = '239.0.0.1'
+
 # Multicast port
 multicast_port = 10000
 
@@ -25,7 +27,8 @@ class ChatServer( threading.Thread ) :
 	def run( self ) :
 		# Set up the server connection
 		connection = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
-		connection.setsockopt( socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, socket.inet_aton( multicast_address ) + socket.inet_aton( '0.0.0.0' ) )
+		connection.setsockopt( socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
+				socket.inet_aton( multicast_address ) + socket.inet_aton( '0.0.0.0' ) )
 		connection.bind( ( '0.0.0.0', multicast_port ) )
 		# Continuously read client message
 		self.running = True
@@ -37,9 +40,9 @@ class ChatServer( threading.Thread ) :
 				# Read the message
 				message, address = connection.recvfrom( 255 )
 				# Print the message
-				print( 'Received from {}:{} > {}'.format( address[0], address[1], message.decode() ) )
+				print( 'Received from {} : {} > {}'.format( *address, message.decode() ) )
 			# Temporization
-			time.sleep( 0.03 )
+			time.sleep( 0.1 )
 		# Close the connection
 		connection.close()
 
@@ -49,8 +52,8 @@ class ChatServer( threading.Thread ) :
 class ChatClient( threading.Thread ) :
 	# Client main loop
 	def run( self ) :
+		# Create a UDP socket
 		connection = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
-		connection.setsockopt( socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 1 )
 		# Continuously read the messages from input and send them
 		self.running = True
 		while self.running :
@@ -70,7 +73,7 @@ class ChatClient( threading.Thread ) :
 			# Send the message through the network
 			connection.sendto( message.encode(), ( multicast_address, multicast_port ) )
 			# Temporization
-			time.sleep( 0.03 )
+			time.sleep( 0.1 )
 		# Close the connection
 		connection.close()
 
