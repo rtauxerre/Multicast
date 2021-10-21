@@ -4,16 +4,14 @@
 # Multicast Chat Application - Server implementation
 # https://github.com/rtauxerre/Multicast
 # Copyright (c) 2021 Michaël Roy
-# usage : $ ./receiver3.py
+# usage : $ ./receiver.py
 #
 
 # External dependencies
 import socket
 
-# Multicast address
+# Multicast address and port
 multicast_address = '239.0.0.1'
-
-# Multicast port
 multicast_port = 10000
 
 # Create the server socket
