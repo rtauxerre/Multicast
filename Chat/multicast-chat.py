@@ -8,6 +8,7 @@
 #
 
 # External dependencies
+import signal
 import socket
 import threading
 
@@ -22,6 +23,7 @@ def Server() :
 		# Set up the server connection
 		connection.setsockopt( socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
 				socket.inet_aton( multicast_address ) + socket.inet_aton( '0.0.0.0' ) )
+		# Bind the socket
 		connection.bind( ( '0.0.0.0', multicast_port ) )
 		# Continuously read client message
 		while True :
@@ -40,8 +42,6 @@ def Client() :
 			message = input( '> ' )
 			# Check if the message is empty
 			if not message : continue
-			# Check if the message is the 'quit' command
-			if message == "quit" : break
 			# Send the message through the network
 			connection.sendto( message.encode(), ( multicast_address, multicast_port ) )
 
@@ -49,8 +49,14 @@ def Client() :
 if __name__ == '__main__' :
 	# Banner
 	print( '\nWelcome to the multicast chat application from RT Auxerre !')
-	print( 'Type \'quit\' to stop the application...\n' )
-	# Start the server
-	threading.Thread( target=Server, daemon=True ).start()
-	# Start the client
-	threading.Thread( target=Client ).start()
+	print( 'Press Ctrl+C to stop the application...\n' )
+	# Handle exceptions such as Ctrl+C
+	try :
+		# Start the server
+		threading.Thread( target=Server, daemon=True ).start()
+		# Start the client
+		threading.Thread( target=Client, daemon=True ).start()
+		# Wait for a signal (such as KeybordInterrupt)
+		signal.pause()
+	# Exceptions : quit the program
+	except : pass
