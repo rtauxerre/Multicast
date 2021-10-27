@@ -24,7 +24,7 @@ class Message :
 		self.text = text
 
 # Chat Server
-def Server( parent ) :
+def Server( new_message_callback ) :
 	# Create a UDP socket
 	with socket.socket( socket.AF_INET, socket.SOCK_DGRAM ) as connection :
 		# Set up the server connection
@@ -36,10 +36,8 @@ def Server( parent ) :
 		while True :
 			# Wait for a message
 			message, address = connection.recvfrom( 4096 )
-			# Print the message
-			parent.history.AppendMessage( Message( address, message.decode() ) )
-			# Update the UI
-			parent.Redraw()
+			# Send the message to the main application
+			new_message_callback( Message( address, message.decode() ) )
 
 # Screen layout
 class Layout :
@@ -65,25 +63,29 @@ class Layout :
 
 # Title window
 class Title :
+	# Make a title window
 	def __init__( self, layout ) :
 		title = "RT Auxerre Multicast Chat"
 		self.window = curses.newwin( layout.title_rows, layout.title_cols,
 			layout.title_start_row + 1, layout.title_start_col )
 		self.window.addstr( 0, int( ( layout.title_cols - len( title ) ) / 2 ), title, curses.A_BOLD )
+	# Redraw the title
 	def Redraw( self ) :
 		self.window.refresh()
 
 # History window
 class History :
+	# Make a chat history window
 	def __init__( self, layout ) :
 		self.messages = []
 		self.window = curses.newwin( layout.history_rows, layout.history_cols,
 			layout.history_start_row, layout.history_start_col )
 		# Because we have a border and some padding, the number of visible rows is fewer
 		self.visible_rows = layout.history_rows - 4
+	# Append a Message object to the history. Does not redraw.
 	def AppendMessage( self, msg ) :
-		# Append a Message object to the history. Does not redraw.
 		self.messages.append( msg )
+	# Redraw the chat history
 	def Redraw( self ) :
 		self.window.clear()
 		self.window.border( 0 )
@@ -98,6 +100,7 @@ class History :
 
 # Prompt Window
 class Prompt :
+	# Make a prompt window
 	def __init__( self, layout ) :
 		self.window = curses.newwin( layout.prompt_rows, layout.prompt_cols,
 			layout.prompt_start_row, layout.prompt_start_col )
@@ -120,7 +123,7 @@ class Prompt :
 class ChatApp :
 	def __init__( self ) :
 		# Catch exceptions
-		try:
+		try :
 			# Initialize curses
 			self.screen = curses.initscr()
 			curses.cbreak()
@@ -132,7 +135,7 @@ class ChatApp :
 			self.history = History( self.layout )
 			self.prompt  = Prompt( self.layout )
 			# Start the server thread to receive messages
-			threading.Thread( target=Server, args=(self,), daemon=True ).start()
+			threading.Thread( target=Server, args=(self.NewMessage,), daemon=True ).start()
 			# Open a client connection to send message
 			self.connection = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
 			# Run the main loop
@@ -158,6 +161,12 @@ class ChatApp :
 			self.screen.keypad(0)
 			self.screen = None
 			curses.endwin()
+	# Receive a new message from the server
+	def NewMessage( self, message ) :
+		# Add the message to the history window
+		self.history.AppendMessage( message )
+		# Update the UI
+		self.Redraw()
 	# Redraw the main screen
 	def Redraw( self ) :
 		self.screen.refresh()
