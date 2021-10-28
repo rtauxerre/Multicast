@@ -47,7 +47,7 @@ class Layout :
 		rows, cols = screen.getmaxyx()
 		# Calculate dimensions of each window
 		TITLE_ROWS = 3
-		PROMPT_ROWS = 3
+		PROMPT_ROWS = 5
 		self.title_rows         = TITLE_ROWS
 		self.title_cols         = cols
 		self.title_start_row    = 0
@@ -89,6 +89,8 @@ class History :
 	def Redraw( self ) :
 		self.window.clear()
 		self.window.border( 0 )
+		self.window.move( 0, 1 )
+		self.window.addstr( ' Message received ', curses.A_BOLD )
 		# Draw the last N messages, where N is the number of visible rows
 		row = 2
 		for msg in self.messages[ -self.visible_rows : ] :
@@ -104,10 +106,6 @@ class Prompt :
 	def __init__( self, layout ) :
 		self.window = curses.newwin( layout.prompt_rows, layout.prompt_cols,
 			layout.prompt_start_row, layout.prompt_start_col )
-		self.window.keypad( 1 )
-		self.window.border( 0 )
-		self.window.move( 1, 1 )
-		self.window.addstr( ' > ', curses.A_BOLD )
 	# Get an input string from the user
 	def GetMessage( self ):
 		return self.window.getstr()
@@ -115,7 +113,9 @@ class Prompt :
 	def Redraw( self ) :
 		self.window.clear()
 		self.window.border( 0 )
-		self.window.move( 1, 1 )
+		self.window.move( 0, 1 )
+		self.window.addstr( ' Send a message ', curses.A_BOLD )
+		self.window.move( 2, 2 )
 		self.window.addstr( ' > ', curses.A_BOLD )
 		self.window.refresh()
 
