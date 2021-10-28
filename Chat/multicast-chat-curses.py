@@ -14,8 +14,11 @@ import threading
 import time
 
 # Multicast address and port
-multicast_address = '239.0.0.1'
-multicast_port = 10000
+MULTICAST_ADDRESS = '239.0.0.1'
+MULTICAST_PORT = 10000
+
+# Application title
+APP_TITLE = 'RT Auxerre Multicast Chat'
 
 # Message class
 class Message :
@@ -29,9 +32,9 @@ def Server( new_message_callback ) :
 	with socket.socket( socket.AF_INET, socket.SOCK_DGRAM ) as connection :
 		# Set up the server connection
 		connection.setsockopt( socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
-				socket.inet_aton( multicast_address ) + socket.inet_aton( '0.0.0.0' ) )
+				socket.inet_aton( MULTICAST_ADDRESS ) + socket.inet_aton( '0.0.0.0' ) )
 		# Bind the socket
-		connection.bind( ( '0.0.0.0', multicast_port ) )
+		connection.bind( ( '0.0.0.0', MULTICAST_PORT ) )
 		# Continuously read client message
 		while True :
 			# Wait for a message
@@ -39,143 +42,90 @@ def Server( new_message_callback ) :
 			# Send the message to the main application
 			new_message_callback( Message( address, message.decode() ) )
 
-# Screen layout
-class Layout :
-	# Determine the terminal size, and the size of each window
-	def __init__( self, screen ) :
-		# Get terminal size
-		rows, cols = screen.getmaxyx()
-		# Calculate dimensions of each window
-		TITLE_ROWS = 3
-		PROMPT_ROWS = 5
-		self.title_rows         = TITLE_ROWS
-		self.title_cols         = cols
-		self.title_start_row    = 0
-		self.title_start_col    = 0
-		self.history_rows       = rows - TITLE_ROWS - PROMPT_ROWS
-		self.history_cols       = cols
-		self.history_start_row  = TITLE_ROWS
-		self.history_start_col  = 0
-		self.prompt_rows        = PROMPT_ROWS
-		self.prompt_cols        = cols
-		self.prompt_start_row   = rows - PROMPT_ROWS
-		self.prompt_start_col   = 0
-
-# Title window
-class Title :
-	# Make a title window
-	def __init__( self, layout ) :
-		title = "RT Auxerre Multicast Chat"
-		self.window = curses.newwin( layout.title_rows, layout.title_cols,
-			layout.title_start_row + 1, layout.title_start_col )
-		self.window.addstr( 0, int( ( layout.title_cols - len( title ) ) / 2 ), title, curses.A_BOLD )
-	# Redraw the title
-	def Redraw( self ) :
-		self.window.refresh()
-
-# History window
-class History :
-	# Make a chat history window
-	def __init__( self, layout ) :
-		self.messages = []
-		self.window = curses.newwin( layout.history_rows, layout.history_cols,
-			layout.history_start_row, layout.history_start_col )
-		# Because we have a border and some padding, the number of visible rows is fewer
-		self.visible_rows = layout.history_rows - 4
-	# Append a Message object to the history. Does not redraw.
-	def AppendMessage( self, msg ) :
-		self.messages.append( msg )
-	# Redraw the chat history
-	def Redraw( self ) :
-		self.window.clear()
-		self.window.border( 0 )
-		self.window.move( 0, 1 )
-		self.window.addstr( ' Message received ', curses.A_BOLD )
-		# Draw the last N messages, where N is the number of visible rows
-		row = 2
-		for msg in self.messages[ -self.visible_rows : ] :
-			self.window.move( row, 3 )
-			self.window.addstr( '{}:{} > '.format( *msg.source ), curses.A_BOLD )
-			self.window.addstr( msg.text )
-			row += 1
-		self.window.refresh()
-
-# Prompt Window
-class Prompt :
-	# Make a prompt window
-	def __init__( self, layout ) :
-		self.window = curses.newwin( layout.prompt_rows, layout.prompt_cols,
-			layout.prompt_start_row, layout.prompt_start_col )
-	# Get an input string from the user
-	def GetMessage( self ):
-		return self.window.getstr()
-	# Redraw the prompt window
-	def Redraw( self ) :
-		self.window.clear()
-		self.window.border( 0 )
-		self.window.move( 0, 1 )
-		self.window.addstr( ' Send a message ', curses.A_BOLD )
-		self.window.move( 2, 2 )
-		self.window.addstr( ' > ', curses.A_BOLD )
-		self.window.refresh()
-
 # Main application
 class ChatApp :
+	# Determine the terminal size, and the size of each window
 	def __init__( self ) :
-		# Catch exceptions
-		try :
-			# Initialize curses
-			self.screen = curses.initscr()
-			curses.cbreak()
-			self.screen.keypad( 1 )
-			# Define the screen layout
-			self.layout = Layout( self.screen )
-			# Initialize all curses-based objects
-			self.title   = Title( self.layout )
-			self.history = History( self.layout )
-			self.prompt  = Prompt( self.layout )
-			# Start the server thread to receive messages
-			threading.Thread( target=Server, args=(self.NewMessage,), daemon=True ).start()
-			# Open a client connection to send message
-			self.connection = socket.socket( socket.AF_INET, socket.SOCK_DGRAM )
-			# Run the main loop
-			while True:
-				# Update the UI
-				self.Redraw()
-				# Get input
-				text = self.prompt.GetMessage()
-				# Continue if the message is empty
-				if not text : continue
-				# Send the message
-				self.connection.sendto( text, ( multicast_address, multicast_port ) )
-				# Wait a moment (curses issue)
-				time.sleep( 0.1 )
-		# Catch the exceptions
-		except : pass
-		# Close the application nicely
-		finally :
-			# Close client connection
-			self.connection.close()
-			# Stop curses
-			curses.nocbreak()
-			self.screen.keypad(0)
-			self.screen = None
-			curses.endwin()
-	# Receive a new message from the server
-	def NewMessage( self, message ) :
-		# Add the message to the history window
-		self.history.AppendMessage( message )
-		# Update the UI
-		self.Redraw()
-	# Redraw the main screen
+		# Initialize curses
+		self.screen = curses.initscr()
+		curses.cbreak()
+		self.screen.keypad( 1 )
+		# Received messages
+		self.messages = []
+		# Setup the screen interface
+		self.SetupInterface()
+		# Start the server thread to receive messages
+		threading.Thread( target=Server, args=(self.ReceiveMessage,), daemon=True ).start()
+		# Open a client connection to send message
+		with socket.socket( socket.AF_INET, socket.SOCK_DGRAM ) as connection :
+			# Catch exceptions
+			try :
+				# Run the main loop
+				while True:
+					# Update the UI
+					self.Redraw()
+					# Get input
+					text = self.prompt.getstr()
+					# Continue if the message is empty
+					if not text : continue
+					# Send the message
+					connection.sendto( text, ( MULTICAST_ADDRESS, MULTICAST_PORT ) )
+					# Wait a moment (curses issue)
+					time.sleep( 0.1 )
+			# Catch the exceptions
+			except : pass
+		# Stop curses
+		curses.nocbreak()
+		self.screen.keypad(0)
+		self.screen = None
+		curses.endwin()
+	# Setup the console interface
+	def SetupInterface( self ) :
+		# Get terminal size
+		screen_height, screen_width = self.screen.getmaxyx()
+		# Define the height of each window
+		title_height = 3
+		prompt_height = 5
+		history_height = screen_height - title_height - prompt_height - 2
+		# Title window
+		self.title = curses.newwin( title_height, screen_width - 2, 0, 1 )
+		self.title.addstr( 1, int( ( screen_width - len( APP_TITLE ) ) / 2 ), APP_TITLE, curses.A_BOLD )
+		# History window
+		self.history = curses.newwin( history_height, screen_width - 2, title_height, 1 )
+		# Save the number of visible rows (history window height - border - padding ) 
+		self.history_visible_rows = history_height - 2 - 2
+		#Prompt window
+		self.prompt = curses.newwin( prompt_height, screen_width - 2, screen_height - prompt_height - 1, 1 )
+	# Redraw the screen
 	def Redraw( self ) :
-		self.screen.refresh()
-		self.title.Redraw()
-		self.history.Redraw()
-		self.prompt.Redraw()
+		# Refresh the screen
+		self.screen.erase()
+		# Refresh the title
+		self.title.refresh()
+		# Refresh the chat history
+		self.history.erase()
+		self.history.border( 0 )
+		self.history.addstr( 0, 1, ' Message received ', curses.A_BOLD )
+		# Draw the last N messages, where N is the number of visible rows
+		row = 2
+		for msg in self.messages[ -self.history_visible_rows : ] :
+			self.history.move( row, 3 )
+			self.history.addstr( '{}:{} > '.format( *msg.source ), curses.A_BOLD )
+			self.history.addstr( msg.text )
+			row += 1
+		self.history.refresh()
+		# Refresh the prompt
+		self.prompt.erase()
+		self.prompt.border( 0 )
+		self.prompt.addstr( 0, 1, ' Send a message ', curses.A_BOLD )
+		self.prompt.addstr( 2, 2, ' > ', curses.A_BOLD )
+		self.prompt.refresh()
+	# Append a message to the chat history
+	def ReceiveMessage( self, msg ) :
+		self.messages.append( msg )
+		self.Redraw()
 
 # Main application
 if __name__ == '__main__' :
 	# Run the app
 	app = ChatApp()
-	
