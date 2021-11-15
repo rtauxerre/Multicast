@@ -9,9 +9,9 @@
 # External dependencies
 import os
 import sys
-from PySide2.QtGui import *
-from PySide2.QtNetwork import *
-from PySide2.QtWidgets import *
+from PySide2.QtGui import Qt, QKeySequence
+from PySide2.QtNetwork import QHostAddress, QUdpSocket
+from PySide2.QtWidgets import QApplication, QLabel, QLineEdit, QShortcut, QTextEdit, QVBoxLayout, QWidget
 
 # Multicast address and port
 MULTICAST_ADDRESS = '239.0.0.1'
