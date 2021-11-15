@@ -14,8 +14,11 @@ from PySide2.QtNetwork import *
 from PySide2.QtWidgets import *
 
 # Multicast address and port
-multicast_address = '239.0.0.1'
-multicast_port = 10000
+MULTICAST_ADDRESS = '239.0.0.1'
+MULTICAST_PORT = 10000
+
+# Application title
+APP_TITLE = 'RT Auxerre Multicast Chat'
 
 # Multicast Chat using Qt
 class QMulticastChat( QWidget ) :
@@ -24,7 +27,7 @@ class QMulticastChat( QWidget ) :
 		# Initialize the class
 		QWidget.__init__( self )
 		# Set the window title
-		self.setWindowTitle( 'RT Auxerre Multicast Chat' )
+		self.setWindowTitle( APP_TITLE )
 		# Set fixed window size
 		self.setFixedWidth(800)
 		self.setFixedHeight(600)
@@ -45,8 +48,8 @@ class QMulticastChat( QWidget ) :
 		self.layout.addWidget( self.message )
 		# Server connection to receive messages
 		self.server = QUdpSocket( self )
-		self.server.bind( QHostAddress( '' ), multicast_port )
-		self.server.joinMulticastGroup( QHostAddress( multicast_address ) )
+		self.server.bind( QHostAddress( '' ), MULTICAST_PORT )
+		self.server.joinMulticastGroup( QHostAddress( MULTICAST_ADDRESS ) )
 		self.server.readyRead.connect( self.receive_message )
 		# Client connection to send messages
 		self.client = QUdpSocket( self )
@@ -55,7 +58,7 @@ class QMulticastChat( QWidget ) :
 		# Return if the message is empty
 		if not self.message.text() : return
 		# Send the message through the network
-		self.client.writeDatagram( self.message.text().encode(), QHostAddress( multicast_address ), multicast_port )
+		self.client.writeDatagram( self.message.text().encode(), QHostAddress( MULTICAST_ADDRESS ), MULTICAST_PORT )
 		# Clear the text input widget
 		self.message.clear()
 	# Receive the messages
@@ -65,7 +68,7 @@ class QMulticastChat( QWidget ) :
 			# Get the message
 			message, host, port = self.server.readDatagram( self.server.pendingDatagramSize() )
 			# Print the message
-			self.chat.append( '{} : {} > {}'.format( host.toString(), port, message.data().decode() ) )
+			self.chat.append( '{}:{} > {}'.format( host.toString(), port, message.data().decode() ) )
 
 # Main program
 if __name__ == "__main__" :
