@@ -3,15 +3,15 @@
 #
 # Multicast Chat Application using Qt
 # https://github.com/rtauxerre/Multicast
-# Copyright (c) 2021 Michaël Roy
+# Copyright (c) 2022 Michaël Roy
 #
 
 # External dependencies
 import os
 import sys
-from PySide2.QtGui import Qt, QKeySequence
-from PySide2.QtNetwork import QHostAddress, QUdpSocket
-from PySide2.QtWidgets import QApplication, QLabel, QLineEdit, QShortcut, QTextEdit, QVBoxLayout, QWidget
+from PySide6.QtGui import Qt, QKeySequence, QShortcut
+from PySide6.QtNetwork import QHostAddress, QUdpSocket
+from PySide6.QtWidgets import QApplication, QLabel, QLineEdit, QTextEdit, QVBoxLayout, QWidget
 
 # Multicast address and port
 MULTICAST_ADDRESS = '239.0.0.1'
@@ -72,13 +72,8 @@ class QMulticastChat( QWidget ) :
 
 # Main program
 if __name__ == "__main__" :
-	# Remove Qt warnings
-	os.environ["QT_DEVICE_PIXEL_RATIO"] = "0"
-	os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
-	os.environ["QT_SCREEN_SCALE_FACTORS"] = "1"
-	os.environ["QT_SCALE_FACTOR"] = "1"
 	# Start the Qt application
 	application = QApplication( sys.argv )
 	window = QMulticastChat()
 	window.show()
-	sys.exit( application.exec_() )
+	sys.exit( application.exec() )
