@@ -8,13 +8,15 @@
 
 # External dependencies
 import os
+import socket
 import sys
 from PySide6.QtGui import Qt, QKeySequence, QShortcut
-from PySide6.QtNetwork import QHostAddress, QUdpSocket
+from PySide6.QtNetwork import QHostAddress, QUdpSocket, QNetworkInterface
 from PySide6.QtWidgets import QApplication, QLabel, QLineEdit, QTextEdit, QVBoxLayout, QWidget
 
 # Multicast address and port
-MULTICAST_ADDRESS = '239.0.0.1'
+MULTICAST_ADDRESS4 = '239.0.0.1'
+MULTICAST_ADDRESS6 = 'FF08::b0b'
 MULTICAST_PORT = 10000
 
 # Application title
@@ -29,8 +31,8 @@ class QMulticastChat( QWidget ) :
 		# Set the window title
 		self.setWindowTitle( APP_TITLE )
 		# Set fixed window size
-		self.setFixedWidth(800)
-		self.setFixedHeight(600)
+		self.setFixedWidth( 800 )
+		self.setFixedHeight( 600 )
 		# Set the Escape key to close the application
 		QShortcut( QKeySequence( Qt.Key_Escape ), self ).activated.connect( self.close )
 		# Text edit to show the received messages
@@ -48,8 +50,11 @@ class QMulticastChat( QWidget ) :
 		self.layout.addWidget( self.message )
 		# Server connection to receive messages
 		self.server = QUdpSocket( self )
-		self.server.bind( QHostAddress( '' ), MULTICAST_PORT )
-		self.server.joinMulticastGroup( QHostAddress( MULTICAST_ADDRESS ) )
+		self.server.bind( QHostAddress.Any, MULTICAST_PORT )
+#		self.server.bind( QHostAddress.AnyIPv4, MULTICAST_PORT )
+#		self.server.bind( QHostAddress.AnyIPv6, MULTICAST_PORT )
+#		self.server.joinMulticastGroup( QHostAddress( MULTICAST_ADDRESS4 ) )
+		self.server.joinMulticastGroup( QHostAddress( MULTICAST_ADDRESS6 ) )
 		self.server.readyRead.connect( self.receive_message )
 		# Client connection to send messages
 		self.client = QUdpSocket( self )
@@ -58,7 +63,8 @@ class QMulticastChat( QWidget ) :
 		# Return if the message is empty
 		if not self.message.text() : return
 		# Send the message through the network
-		self.client.writeDatagram( self.message.text().encode(), QHostAddress( MULTICAST_ADDRESS ), MULTICAST_PORT )
+#		self.client.writeDatagram( self.message.text().encode(), QHostAddress( MULTICAST_ADDRESS4 ), MULTICAST_PORT )
+		self.client.writeDatagram( self.message.text().encode(), QHostAddress( MULTICAST_ADDRESS6 ), MULTICAST_PORT )
 		# Clear the text input widget
 		self.message.clear()
 	# Receive the messages
@@ -72,6 +78,10 @@ class QMulticastChat( QWidget ) :
 
 # Main program
 if __name__ == "__main__" :
+	# Detect IPv6
+	if not socket.has_dualstack_ipv6() :
+		print( 'IPv6 not detected. Program terminated !')
+		exit()
 	# Start the Qt application
 	application = QApplication( sys.argv )
 	window = QMulticastChat()
