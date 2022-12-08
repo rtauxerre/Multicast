@@ -20,12 +20,6 @@ MULTICAST_PORT = 10000
 # Application title
 APP_TITLE = 'RT Auxerre Multicast Chat'
 
-# Message class
-class Message :
-	def __init__( self, source = None, text = None ) :
-		self.source = source
-		self.text = text
-
 # Chat Server
 def Server( new_message_callback ) :
 	# Create a UDP socket
@@ -40,7 +34,7 @@ def Server( new_message_callback ) :
 			# Wait for a message
 			message, address = connection.recvfrom( 4096 )
 			# Send the message to the main application
-			new_message_callback( Message( address, message.decode() ) )
+			new_message_callback( ( '{}:{}'.format( *address ), message.decode() ) )
 
 # Main application
 class ChatApp :
@@ -108,10 +102,10 @@ class ChatApp :
 		self.history.addstr( 0, 1, ' Message received ', curses.A_BOLD )
 		# Draw the last N messages, where N is the number of visible rows
 		row = 2
-		for msg in self.messages[ -self.history_visible_rows : ] :
+		for address, message in self.messages[ -self.history_visible_rows : ] :
 			self.history.move( row, 3 )
-			self.history.addstr( '{}:{} > '.format( *msg.source ), curses.A_BOLD )
-			self.history.addstr( msg.text )
+			self.history.addstr( '{} > '.format( address ), curses.A_BOLD )
+			self.history.addstr( message )
 			row += 1
 		self.history.refresh()
 		# Refresh the prompt
