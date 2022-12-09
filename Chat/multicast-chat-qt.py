@@ -72,9 +72,9 @@ class QMulticastChat( QWidget ) :
 		# Handle all the pending messages
 		while self.server.hasPendingDatagrams() :
 			# Get the message
-			message, host, port = self.server.readDatagram( self.server.pendingDatagramSize() )
+			message, host, _ = self.server.readDatagram( self.server.pendingDatagramSize() )
 			# Print the message
-			self.chat.append( '{}:{} > {}'.format( host.toString(), port, message.data().decode() ) )
+			self.chat.append( '<b>{} ></b> {}'.format( host.toString(), message.data().decode() ) )
 
 # Main program
 if __name__ == "__main__" :
